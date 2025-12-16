@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Short Link Generator</title></head>
+<body>
+<h2>Create Short Link</h2>
+<form id="form">
+<input type="url" id="destination" placeholder="https://example.com" required>
+<button>Create</button>
+</form>
+<p id="output"></p>
+<script>
+document.getElementById('form').addEventListener('submit', async e => {
+e.preventDefault();
+const destination = document.getElementById('destination').value;
+const res = await fetch('/add-redirect', {
+method: 'POST',
+headers: {'Content-Type':'application/json'},
+body: JSON.stringify({ destination })
+});
+const data = await res.json();
+document.getElementById('output').innerText = data.redirectUrl || data.message;
+});
+</script>
+</body>
+</html>
