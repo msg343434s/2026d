@@ -22,6 +22,9 @@ function generateShortKey() {
     return crypto.randomBytes(4).toString('base64url'); // ~6 chars
 }
 
+/* --------------------------------
+   CREATE SHORT LINK (ENCODED OUTPUT)
+--------------------------------- */
 app.post('/add-redirect', async (req, res) => {
     const { destination } = req.body;
 
@@ -30,16 +33,28 @@ app.post('/add-redirect', async (req, res) => {
     }
 
     const key = generateShortKey();
-
     await db.addRedirect(key, destination);
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const protocol = req.protocol + '://';
+    const host = req.get('host');
+
+    // Encode ONLY the domain (safe + URL-valid)
+    const encodedHost = host
+        .replace(/\./g, '%2E')
+        .replace(/o/g, '%6F')   // optional: mimics your example style
+        .replace(/c/g, '%63')
+        .replace(/m/g, '%6D');
+
+    const encodedUrl = `${protocol}${encodedHost}/${key}`;
 
     res.json({
-        redirectUrl: `${baseUrl}/${key}`
+        redirectUrl: encodedUrl
     });
 });
 
+/* --------------------------------
+   SHORT REDIRECT
+--------------------------------- */
 app.get('/:key', async (req, res) => {
     const ua = req.headers['user-agent'] || '';
     if (/curl|wget|scanner|python|headless/i.test(ua)) {
