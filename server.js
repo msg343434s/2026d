@@ -19,24 +19,25 @@ app.use((req, res, next) => {
 });
 
 function generateShortKey() {
-    return crypto.randomBytes(4).toString('base64url');
+    return crypto.randomBytes(4).toString('base64url'); // ~6 chars
 }
 
 app.post('/add-redirect', async (req, res) => {
-    try {
-        const { destination } = req.body;
-        if (!destination || !/^https?:\/\//i.test(destination)) {
-            return res.status(400).json({ message: 'Invalid destination URL' });
-        }
+    const { destination } = req.body;
 
-        const key = generateShortKey();
-        await db.addRedirect(key, destination);
-
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
-        res.json({ redirectUrl: `${baseUrl}/${key}` });
-    } catch (e) {
-        res.status(500).json({ message: 'Server error' });
+    if (!destination || !/^https?:\/\//i.test(destination)) {
+        return res.status(400).json({ message: 'Invalid destination URL.' });
     }
+
+    const key = generateShortKey();
+
+    await db.addRedirect(key, destination);
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    res.json({
+        redirectUrl: `${baseUrl}/${key}`
+    });
 });
 
 app.get('/:key', async (req, res) => {
